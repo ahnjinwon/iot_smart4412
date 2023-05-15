@@ -1,0 +1,7 @@
+smart4412의 기본 사용방법
+기본 두더지게임 조사
+깃허브 사용법 익히기
+
+출처:
+smart4412기본사용법: https://comonyo.tistory.com/category/Embedded%20Programming/Kernel%20Porting
+기존의 smart4412에서의 두더지게임: https://github.com/2022HKNUiotprogrammingTeam1
