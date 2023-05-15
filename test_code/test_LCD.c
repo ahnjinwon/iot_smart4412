@@ -1,4 +1,4 @@
-//scanf로 입력받아 LCD띄우기
+//LCD에 hello world 띄우기
 #include <stdio.h>
 #include <stdlib.h>
 #include <fcntl.h>
@@ -8,16 +8,15 @@
 int main()
 {
     int clcd_d;
-    char buf[10];
+    char str[]="Hello World";
 
     if((clcd_d = open(clcd,O_RDWR)) < 0)
     {
         perror("open");
         exit(1);
     }
-
-    scanf("%s",buf);
-    write(clcd_d,&buf,strlen(buf));
+    
+    write(clcd_d,str,sizeof(str));
     close(clcd_d);
     return 0;
 }
