@@ -1,4 +1,3 @@
-//¾ËÆÄºª ¼ø¼­´ë·Î ¶ç¿ì±â
 #include <termios.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -41,7 +40,7 @@ int main() {
     long best_score;    //ÃÖ°íÁ¡¼ö
     long current_score = 0;//ÇöÀçÁ¡¼ö
     int run = 0;    //°ÔÀÓ ÁøÇàÀ» À§ÇÑ ¹«ÇÑ·çÇÁ
-    int state = 0;
+    int state = 0;  //°ÔÀÓ ½ÃÀÛ Àü ¹«ÇÑ·çÇÁ¸¦ À§ÇÑ Á¤¼ö
     int count = 60; //³²Àº½Ã°£
     int life = 5;   //¸ñ¼û
     int stage = 1;  //½ºÅ×ÀÌÁö
@@ -53,17 +52,14 @@ int main() {
     fclose(file);
     
     game_start(best_score, current_score, state);
-    while (state = 0) { //½Ã°£Ã¼Å©¸¦ À§ÇÑ ¹«ÇÑ·çÇÁ
+    while (state = 0) { //Á¤È®ÇÑ ½Ã°£Ã¼Å©¸¦ À§ÇØ °ÔÀÓ ½ÃÀÛ Àü±îÁö ¹«ÇÑ·çÇÁ µ¹·Á³õ±â
         if (state == 1)
             break;
     }
     while (run == 0) {  //¹«ÇÑ·çÇÁ µ¹¸é¼­ °ÔÀÓ ½ÃÀÛ
-        if (stage == 1) {   //1½ºÅ×ÀÌÁö
-            stage_1_clcd_print(best_score, current_score, life);
 
-        }
         int start_time = (unsigned)time(NULL);  //½Ã°£ Ã¼Å©
-        if (end_time - start_time == 0) {   //60ÃÊ°¡ Áö³ª¸é
+        if (end_time - start_time == 0) {   //60ÃÊ°¡ Áö³ª¸é Clear
             if ((clcd_d = open(clcd, O_RDWR)) < 0)
             {
                 perror("open");
@@ -74,8 +70,8 @@ int main() {
             sleep(1);
             run = 1;
         }
-        
-        if (life == 0) {    //¸ñ¼ûÀÌ 0ÀÌ µÇ¸é
+
+        if (life <= 0) {    //¸ñ¼ûÀÌ 0ÀÌ µÇ¸é Game Over
             if ((clcd_d = open(clcd, O_RDWR)) < 0)
             {
                 perror("open");
@@ -86,14 +82,32 @@ int main() {
             sleep(1);
             run = 1;
         }
+
+        if (stage == 1) {   //1½ºÅ×ÀÌÁö
+            stage_1_clcd_print(best_score, current_score, life);
+            if (current_score >= 100) { //100Á¡À» ³Ñ±â¸é 2½ºÅ×ÀÌÁö ÁøÀÔ
+                stage = 2;
+            }
+        }
+
+        if (stage == 2) {   //2½ºÅ×ÀÌÁö
+            stage_2_clcd_print(best_score, current_score, life);
+            if (current_score >= 250) { //250Á¡À» ³Ñ±â¸é 3½ºÅ×ÀÌÁö ÁøÀÔ
+                stage = 3;
+            }
+        }
+
+        if (stage == 3) {   //3½ºÅ×ÀÌÁö
+            stage_3_clcd_print(best_score, current_score, life);
+        }
+
     }
-    best_score = 50000;
     Set_score(best_score,current_score);    //°ÔÀÓ Á¾·áÈÄ ÃÖ°íÁ¡¼ö ºñ±³
     return 0;
 }
 
-void Set_score(long best_score, long current_score) {   //ÇöÀçÁ¡¼ö¿Í ±âÁ¸ ÃÖ°íÁ¡¼ö¸¦ ºñ±³ÇÏ¿© ÅØ½ºÆ® ÆÄÀÏ¿¡ ÃÖ°íÁ¡¼ö ¾²°í clcd¿¡ ¾²±â
-    if (current_score > best_score) {
+void Set_score(long best_score, long current_score) {   //ÇöÀçÁ¡¼ö¿Í ±âÁ¸ ÃÖ°íÁ¡¼ö¸¦ ºñ±³
+    if (current_score > best_score) {   //±â·Ï °»½Å ½Ã New Best Score·Î Á¡¼ö Ç¥±â, txtÆÄÀÏ¿¡ ÃÖ°í±â·Ï °»½Å
         FILE* file;
         file = fopen("best_score.txt", "w");
         fprintf(file, "%ld", current_score);
@@ -112,7 +126,7 @@ void Set_score(long best_score, long current_score) {   //ÇöÀçÁ¡¼ö¿Í ±âÁ¸ ÃÖ°íÁ¡
         write(clcd_d, clcd_score, strlen(clcd_score));
         close(clcd_d);
     }
-    else {
+    else {                              //±â·Ï °»½Å ½ÇÆÐ ½Ã ±âÁ¸ ÃÖ°íÁ¡¼ö¸¦ Ç¥±â
         int clcd_d;
         char new_bestscore[5];
         char clcd_score[30] = "best_score: ";
@@ -143,10 +157,9 @@ void stage_1_clcd_print(long best_score ,long current_score, int life) {  //1½ºÅ
         perror("open");
         exit(1);
     }
-    sprintf(stage_clcd, "1");
+    sprintf(stage_clcd, "1 ");
     sprintf(score_current, "%d  ", current_score);
-    sprintf(score_best, "%d  ", best_score);
-    sprintf(life_clcd, "%d ", life);
+    sprintf(life_clcd, "%d", life);
     strcat(clcd_stage, stage_clcd);
     strcat(clcd_stage, clcd_life);
     strcat(clcd_stage, life_clcd);
@@ -157,66 +170,68 @@ void stage_1_clcd_print(long best_score ,long current_score, int life) {  //1½ºÅ
     close(clcd_d);
 }
 
-void stage_2_clcd_print(long best_score, long current_score) {  //2½ºÅ×ÀÌÁö clcdÃâ·Â¹®
+void stage_2_clcd_print(long best_score, long current_score, int life) {  //2½ºÅ×ÀÌÁö clcdÃâ·Â¹®
 
     int clcd_d;
     char stage_clcd[5];
+    char life_clcd[5];
     char score_current[5];
     char score_best[5];
 
-    char clcd_stage[30] = "stage : ";
+    char clcd_stage[30] = "stage: ";
+    char clcd_life[30] = "life: ";
     char clcd_text1[30] = "score: ";
-    char clcd_text2[30] = "best_score: ";
 
     if ((clcd_d = open(clcd, O_RDWR)) < 0)
     {
         perror("open");
         exit(1);
     }
-    sprintf(stage_clcd, "2\n");
+    sprintf(stage_clcd, "2 ");
     sprintf(score_current, "%d  ", current_score);
-    sprintf(score_best, "%d  ", best_score);
+    sprintf(life_clcd, "%d", life);
     strcat(clcd_stage, stage_clcd);
+    strcat(clcd_stage, clcd_life);
+    strcat(clcd_stage, life_clcd);
     strcat(clcd_stage, clcd_text1);
     strcat(clcd_stage, score_current);
-    strcat(clcd_stage, clcd_text2);
-    strcat(clcd_stage, score_best);
 
     write(clcd_d, clcd_stage, strlen(clcd_stage));
     close(clcd_d);
 }
 
-void stage_3_clcd_print(long best_score, long current_score) {  //3½ºÅ×ÀÌÁö clcdÃâ·Â¹®
+void stage_3_clcd_print(long best_score, long current_score, int life) {  //3½ºÅ×ÀÌÁö clcdÃâ·Â¹®
 
     int clcd_d;
     char stage_clcd[5];
+    char life_clcd[5];
     char score_current[5];
     char score_best[5];
 
-    char clcd_stage[30] = "stage : ";
+    char clcd_stage[30] = "stage: ";
+    char clcd_life[30] = "life: ";
     char clcd_text1[30] = "score: ";
-    char clcd_text2[30] = "best_score: ";
 
     if ((clcd_d = open(clcd, O_RDWR)) < 0)
     {
         perror("open");
         exit(1);
     }
-    sprintf(stage_clcd, "3\n");
+    sprintf(stage_clcd, "3 ");
     sprintf(score_current, "%d  ", current_score);
-    sprintf(score_best, "%d  ", best_score);
+    sprintf(life_clcd, "%d", life);
     strcat(clcd_stage, stage_clcd);
+    strcat(clcd_stage, clcd_life);
+    strcat(clcd_stage, life_clcd);
     strcat(clcd_stage, clcd_text1);
     strcat(clcd_stage, score_current);
-    strcat(clcd_stage, clcd_text2);
-    strcat(clcd_stage, score_best);
 
     write(clcd_d, clcd_stage, strlen(clcd_stage));
     close(clcd_d);
 }
 
 
-void game_start(long best_score, long current_score, int state) { //ÅÃÆ®½ºÀ§Ä¡ ´©¸£¸é °ÔÀÓ½ÃÀÛ
+void game_start(long best_score, long current_score, int state) { //°ÔÀÓ ½ÃÀÛ ºÎºÐ
     int clcd_d;
     char str[] = "Press Any Button";
     char Best_Score[] = "best_score:";
@@ -235,7 +250,7 @@ void game_start(long best_score, long current_score, int state) { //ÅÃÆ®½ºÀ§Ä¡ ´
         perror("open");
         exit(1);
     }
-    write(clcd_d, str, strlen(str));
+    write(clcd_d, str, strlen(str));    //ÇÁ·Î±×·¥ ½ÃÀÛ ½Ã clcd¿¡ press any button Ç¥±â
     
     while (1)
     {
@@ -243,7 +258,7 @@ void game_start(long best_score, long current_score, int state) { //ÅÃÆ®½ºÀ§Ä¡ ´
         if (c)
             break;
     }
-    switch (c)  //¾Æ¹« ¹öÆ°ÀÌ³ª ´©¸£¸é °ÔÀÓ ½ÃÀÛ
+    switch (c)  //¾Æ¹« ¹öÆ°ÀÌ³ª ´©¸£¸é ÃÖ°íÁ¡¼ö Ç¥½Ã ÈÄ °ÔÀÓ ½ÃÀÛ
     {
     case 1: 
         if ((clcd_d = open(clcd, O_RDWR)) < 0)
