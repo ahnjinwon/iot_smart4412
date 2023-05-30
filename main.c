@@ -12,13 +12,14 @@
 #define dot "/dev/dot"
 #define clcd "/dev/clcd"
 #define tact_d "/dev/tactsw"
-#define fnd "/dev/fnd"
+#define FND_DEVICE "/dev/fnd"
 
 void Set_score();   //게임 종료시 최고점수 수정
 void stage_1_clcd_print();  //1스테이지 clcd 출력
 void stage_2_clcd_print();  //2스테이지 clcd 출력
 void stage_3_clcd_print();  //3스테이지 clcd 출력
 void game_start();  //택트스위치 누르면 게임 시작
+void timer();
 
 unsigned char mole[9][8] = {
     // 도트 매트릭스 화면
@@ -31,6 +32,11 @@ unsigned char mole[9][8] = {
     {0x00, 0x60, 0x60, 0x00, 0x00, 0x00, 0x00, 0x00}, //7번두더지
     {0x00, 0x18, 0x18, 0x00, 0x00, 0x00, 0x00, 0x00}, //8번두더지
     {0x00, 0x06, 0x06, 0x00, 0x00, 0x00, 0x00, 0x00}  //9번두더지
+};
+
+const unsigned char fnd_data[16] = {    //fnd
+    0xC0, 0xF9, 0xA4, 0xB0, 0x99, 0x92, 0x82, 0xF8,
+    0x80, 0x90, 0xA0, 0x88, 0x83, 0xC6, 0xA1, 0x8E
 };
 
 int main() {
@@ -58,18 +64,7 @@ int main() {
     }
     while (run == 0) {  //무한루프 돌면서 게임 시작
 
-        int start_time = (unsigned)time(NULL);  //시간 체크
-        if (end_time - start_time == 0) {   //60초가 지나면 Clear
-            if ((clcd_d = open(clcd, O_RDWR)) < 0)
-            {
-                perror("open");
-                exit(1);
-            }
-            write(clcd_d, "Clear!", strlen("Clear!"));
-            close(clcd_d);
-            sleep(1);
-            run = 1;
-        }
+        timer();
 
         if (life <= 0) {    //목숨이 0이 되면 Game Over
             if ((clcd_d = open(clcd, O_RDWR)) < 0)
@@ -407,4 +402,31 @@ void game_start(long best_score, long current_score, int state) { //게임 시작 부
     }
     close(clcd_d);
     close(tact);
+}
+
+void timer() {
+    int fnd_d;
+    unsigned char fnd_value[4];
+
+    if ((fnd_d = open(FND_DEVICE, O_RDWR)) < 0)
+    {
+        perror("open");
+        exit(1);
+    }
+
+    int seconds;
+    // 60초 타이머
+    for (seconds = 60; seconds >= 0; seconds--)
+    {
+        fnd_value[0] = fnd_data[0];
+        fnd_value[1] = fnd_data[0];
+        fnd_value[2] = fnd_data[seconds / 10]; // 십의 자리
+        fnd_value[3] = fnd_data[seconds % 10]; // 일의 자리
+
+        write(fnd_d, fnd_value, sizeof(fnd_value));
+
+        sleep(1);
+    }
+
+    close(fnd_d);
 }
