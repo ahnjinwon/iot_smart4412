@@ -86,7 +86,7 @@ int main() {
 
             displayMole(moleIndex);
 
-            usleep(1300000); // Display mole for 2 seconds
+            usleep(1300000); // 두더지 1.3초 동안 유지
 
             tact = open(tact_d, O_RDWR);
             read(tact, &c, sizeof(c));
@@ -104,7 +104,7 @@ int main() {
             case 12: num = 9; break;
             }
             if (num == (moleIndex + 1)) {
-                current_score += 10;
+                current_score += 100;
                 printf("get the mole!\n");
                 num = 100;
             }
@@ -126,7 +126,7 @@ int main() {
                 life2 = life;
             }
             timer(end_time, started_time);
-            if (current_score >= 100) { //100점을 넘기면 2스테이지 진입
+            if (current_score >= 1000) { //100점을 넘기면 2스테이지 진입
                 stage = 2;
             }
 
@@ -140,7 +140,7 @@ int main() {
 
             displayMole(moleIndex);
 
-            usleep(700000); // Display mole for 2 seconds
+            usleep(700000); // 두더지 0.7초 동안 유지
 
             tact = open(tact_d, O_RDWR);
             read(tact, &c, sizeof(c));
@@ -158,7 +158,7 @@ int main() {
             case 12: num = 9; break;
             }
             if (num == (moleIndex + 1)) {
-                current_score+=15;
+                current_score+=150;
                 printf("get the mole!\n");
                 num = 100;
             }
@@ -179,7 +179,7 @@ int main() {
                 life2 = life;
             }
             timer(end_time, started_time);
-            if (current_score >= 250) { //250점을 넘기면 3스테이지 진입
+            if (current_score >= 2500) { //250점을 넘기면 3스테이지 진입
                 stage = 3;
             }
         }
@@ -192,7 +192,7 @@ int main() {
 
             displayMole(moleIndex);
 
-            usleep(400000); // Display mole for 2 seconds
+            usleep(400000); // 두더지 0.4초 동안 유지
 
             tact = open(tact_d, O_RDWR);
             read(tact, &c, sizeof(c));
@@ -210,7 +210,7 @@ int main() {
             case 12: num = 9; break;
             }
             if (num == (moleIndex + 1)) {
-                current_score+=20;
+                current_score+=200;
                 printf("get the mole!\n");
                 num = 100;
 
@@ -288,14 +288,14 @@ void Set_score(long best_score, long current_score) {   //현재점수와 기존 최고점
     }
     else {                              //기록 갱신 실패 시 기존 최고점수를 표기
         FILE* file;
-        file = fopen("best_score.txt", "w");
-        fprintf(file, "%ld", current_score);
+        file = fopen("best_score.txt", "r");    //텍스트 파일에서 최고 점수 받기
+        fscanf(file, "%ld",     &best_score);
         fclose(file);
 
         int clcd_d;
         char new_bestscore[5];
         char clcd_score[30] = "best_score: ";
-        sprintf(new_bestscore, "%d ", current_score);
+        sprintf(new_bestscore, "%d ", best_score);
         strcat(clcd_score, new_bestscore);
         if ((clcd_d = open(clcd, O_RDWR)) < 0)
         {
